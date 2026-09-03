@@ -6,10 +6,11 @@
 
 ## 在线页面
 
-- [困难模式 · 30 张地图](hard_maps/index.html)：103001–103030，每张图片包含 1F / 2F，适合手机保存。
-- [噩梦模式 · 13 张三层地图](nightmare_maps/index.html)：104001–104013，每张图片包含地下层（B1）、1F 和 2F，适合手机保存。
-- [掉落概率查看器](loot_explorer.html)：按掉落来源、品质和价值查看静态概率。
-- [地图辨认工具](map_identification.html)：按入口门数、方向及后续房间辨认地图编号。
+- [网站首页](https://lemou-memo.github.io/identityv-journal-guide/)
+- [困难模式 · 30 张地图](https://lemou-memo.github.io/identityv-journal-guide/hard_maps/)：103001–103030，每张图片包含 1F / 2F，适合手机保存。
+- [噩梦模式 · 13 张三层地图](https://lemou-memo.github.io/identityv-journal-guide/nightmare_maps/)：104001–104013，每张图片包含地下层（B1）、1F 和 2F，适合手机保存。
+- [掉落概率查看器](https://lemou-memo.github.io/identityv-journal-guide/loot_explorer.html)：按掉落来源、品质和价值查看静态概率。
+- [地图辨认工具](https://lemou-memo.github.io/identityv-journal-guide/map_identification.html)：按入口门数、方向及后续房间辨认地图编号。
 
 ## 功能预览
 

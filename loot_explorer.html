@@ -1,0 +1,615 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="第五人格加页手记困难模式与噩梦模式掉落概率查看器，可逐层查看容器、品质和价值概率。">
+  <meta name="keywords" content="第五人格,加页手记,困难模式,噩梦模式,掉落概率,宝箱概率,木箱,金箱,紫箱">
+  <title>第五人格 · 加页手记｜困难模式与噩梦模式掉落概率</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0b1119;
+      --panel: #111a25;
+      --panel-2: #172231;
+      --line: #2a394b;
+      --text: #edf2f8;
+      --muted: #93a2b5;
+      --gold: #f0c75e;
+      --gold-2: #a97918;
+      --green: #63d3a3;
+      --q3: #5aa7cc;
+      --q4: #b47ae8;
+      --q5: #e3b33e;
+      --none: #657184;
+      --danger: #e78075;
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+    html { background: var(--bg); }
+    body {
+      margin: 0;
+      min-width: 320px;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 85% -10%, rgba(240,199,94,.12), transparent 32rem),
+        radial-gradient(circle at 8% 30%, rgba(90,167,204,.08), transparent 28rem),
+        var(--bg);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      line-height: 1.5;
+    }
+
+    button { font: inherit; }
+    .shell { width: min(1240px, 100%); margin: 0 auto; padding: 24px 22px 60px; }
+    .topbar {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 20px;
+      margin-bottom: 24px;
+    }
+    h1 { margin: 0; font-size: clamp(26px, 4vw, 42px); line-height: 1.15; letter-spacing: -.03em; }
+    .eyebrow { color: var(--gold); font-size: 13px; font-weight: 800; letter-spacing: .14em; margin-bottom: 8px; }
+    .subtitle { color: var(--muted); margin: 10px 0 0; max-width: 720px; }
+    .segmented {
+      display: inline-flex;
+      padding: 4px;
+      gap: 4px;
+      border: 1px solid var(--line);
+      background: rgba(17,26,37,.9);
+      border-radius: 14px;
+      flex: 0 0 auto;
+    }
+    .segmented button {
+      border: 0;
+      color: var(--muted);
+      background: transparent;
+      padding: 10px 15px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 750;
+    }
+    .segmented button.active { color: #16120a; background: var(--gold); }
+
+    .logic-strip {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0,1fr));
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+    .logic-step {
+      position: relative;
+      border: 1px solid var(--line);
+      background: rgba(17,26,37,.76);
+      border-radius: 14px;
+      padding: 14px 16px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .logic-step strong { color: var(--text); display: block; font-size: 15px; margin-bottom: 2px; }
+    .logic-step:not(:last-child)::after {
+      content: "›";
+      position: absolute;
+      right: -10px;
+      top: 50%;
+      z-index: 2;
+      transform: translateY(-50%);
+      width: 19px;
+      height: 24px;
+      display: grid;
+      place-items: center;
+      color: var(--gold);
+      background: var(--bg);
+      font-size: 22px;
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin: 0 0 12px;
+    }
+    .section-title h2 { margin: 0; font-size: 18px; }
+    .filters { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; }
+    .filters::-webkit-scrollbar { display: none; }
+    .filter {
+      white-space: nowrap;
+      border: 1px solid var(--line);
+      color: var(--muted);
+      background: transparent;
+      border-radius: 999px;
+      padding: 6px 11px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+    .filter.active { border-color: #74602d; color: var(--gold); background: rgba(240,199,94,.08); }
+
+    .sources {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .source {
+      min-height: 116px;
+      text-align: left;
+      color: var(--text);
+      border: 1px solid var(--line);
+      background: linear-gradient(145deg, rgba(24,35,50,.94), rgba(15,23,33,.94));
+      border-radius: 16px;
+      padding: 15px;
+      cursor: pointer;
+      transition: transform .16s ease, border-color .16s ease, background .16s ease;
+    }
+    .source:hover { transform: translateY(-2px); border-color: #496078; }
+    .source.active { border-color: var(--gold-2); background: linear-gradient(145deg, rgba(73,58,25,.62), rgba(22,28,35,.96)); box-shadow: 0 0 0 1px rgba(240,199,94,.16) inset; }
+    .source-icon { font-size: 25px; line-height: 1; margin-bottom: 14px; }
+    .source-name { display: block; font-size: 15px; font-weight: 800; margin-bottom: 3px; }
+    .source-meta { display: block; color: var(--muted); font-size: 12px; }
+    .source-tag { float: right; border-radius: 999px; padding: 2px 7px; background: rgba(99,211,163,.1); color: var(--green); font-size: 11px; }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: minmax(0, .88fr) minmax(420px, 1.12fr);
+      gap: 14px;
+      align-items: start;
+    }
+    .panel {
+      border: 1px solid var(--line);
+      background: rgba(17,26,37,.9);
+      border-radius: var(--radius);
+      overflow: hidden;
+      min-width: 0;
+    }
+    .panel-head { padding: 19px 20px 15px; border-bottom: 1px solid var(--line); }
+    .panel-head h2 { margin: 0; font-size: 20px; }
+    .panel-head p { margin: 6px 0 0; color: var(--muted); font-size: 13px; }
+    .panel-body { padding: 18px 20px 20px; }
+
+    .roll-tabs { display: flex; gap: 7px; overflow-x: auto; padding: 0 0 14px; scrollbar-width: none; }
+    .roll-tabs::-webkit-scrollbar { display: none; }
+    .roll-tab {
+      border: 1px solid var(--line);
+      background: var(--panel-2);
+      color: var(--muted);
+      border-radius: 10px;
+      padding: 8px 11px;
+      white-space: nowrap;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .roll-tab.active { border-color: var(--gold-2); color: var(--gold); background: rgba(240,199,94,.08); }
+    .roll-note {
+      border: 1px solid #31445a;
+      background: #142131;
+      color: #b8c7d8;
+      border-radius: 12px;
+      padding: 11px 13px;
+      margin-bottom: 14px;
+      font-size: 12px;
+    }
+    .roll-note b { color: var(--text); }
+
+    .quality-list { display: grid; gap: 9px; }
+    .quality {
+      width: 100%;
+      border: 1px solid var(--line);
+      background: #121d29;
+      color: var(--text);
+      border-radius: 13px;
+      padding: 13px 14px;
+      cursor: pointer;
+      text-align: left;
+    }
+    .quality.active { border-color: var(--accent); box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 35%, transparent) inset; }
+    .quality-top { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+    .quality-label { font-weight: 800; color: var(--accent); }
+    .quality-percent { font-variant-numeric: tabular-nums; font-size: 20px; font-weight: 850; }
+    .track { height: 5px; background: #263343; border-radius: 999px; margin-top: 10px; overflow: hidden; }
+    .track > i { display: block; height: 100%; width: var(--width); background: var(--accent); border-radius: inherit; }
+    .quality small { display: block; color: var(--muted); margin-top: 7px; }
+
+    .value-summary { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 8px; margin-bottom: 15px; }
+    .metric { border: 1px solid var(--line); background: #121d29; border-radius: 12px; padding: 11px 12px; min-width: 0; }
+    .metric span { display: block; color: var(--muted); font-size: 11px; }
+    .metric strong { display: block; margin-top: 3px; font-size: 17px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    .value-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+    .value-table th { color: var(--muted); font-size: 11px; text-align: right; font-weight: 650; padding: 0 7px 8px; }
+    .value-table th:first-child { text-align: left; }
+    .value-table td { border-top: 1px solid #253344; padding: 11px 7px; text-align: right; font-variant-numeric: tabular-nums; vertical-align: top; }
+    .value-table td:first-child { text-align: left; }
+    .value-main { display: block; font-weight: 850; color: var(--gold); }
+    .item-ids { display: block; color: var(--muted); font-size: 10px; margin-top: 2px; overflow-wrap: anywhere; }
+    .within { color: var(--text); font-weight: 750; }
+    .overall { color: var(--muted); }
+    .mini-track { height: 4px; margin-top: 5px; border-radius: 9px; background: #263343; overflow: hidden; }
+    .mini-track i { display: block; height: 100%; background: var(--active-quality, var(--gold)); }
+
+    .empty { padding: 18px; border: 1px dashed #3b4b5e; border-radius: 13px; color: var(--muted); }
+    .empty strong { color: var(--text); display: block; margin-bottom: 6px; }
+    .warning { color: #f2b8b1; }
+    .source-detail { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line); color: var(--muted); font-size: 12px; }
+    .source-detail b { color: var(--text); }
+
+    details.audit { margin-top: 18px; border: 1px solid var(--line); background: rgba(17,26,37,.72); border-radius: 15px; }
+    details.audit summary { padding: 14px 16px; cursor: pointer; color: var(--muted); font-weight: 700; }
+    .audit-body { padding: 0 16px 15px; color: var(--muted); font-size: 12px; }
+    .audit-body code { color: #c8d7e8; }
+    .audit-body ul { margin: 8px 0 0; padding-left: 19px; }
+    .foot { margin-top: 13px; color: #6f7d8e; font-size: 11px; text-align: center; }
+
+    @media (max-width: 920px) {
+      .sources { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .workspace { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 640px) {
+      .shell { padding: 18px 13px 42px; }
+      .topbar { display: block; }
+      .segmented { width: 100%; margin-top: 17px; }
+      .segmented button { flex: 1; }
+      .logic-strip { grid-template-columns: 1fr; }
+      .logic-step:not(:last-child)::after { content: "↓"; right: 18px; top: auto; bottom: -15px; transform: none; width: 24px; }
+      .section-title { align-items: flex-start; flex-direction: column; }
+      .filters { width: 100%; }
+      .sources {
+        display: flex;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        margin-left: -13px;
+        margin-right: -13px;
+        padding: 0 13px 5px;
+        scrollbar-width: none;
+      }
+      .sources::-webkit-scrollbar { display: none; }
+      .source { flex: 0 0 168px; scroll-snap-align: start; }
+      .workspace { display: block; }
+      .panel + .panel { margin-top: 12px; }
+      .panel-head { padding: 16px 15px 13px; }
+      .panel-body { padding: 15px; }
+      .value-summary { grid-template-columns: 1fr 1fr; }
+      .value-summary .metric:last-child { grid-column: 1 / -1; }
+      .value-table th, .value-table td { padding-left: 4px; padding-right: 4px; }
+      .item-ids { font-size: 9px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div>
+        <div class="eyebrow">第五人格 · 加页手记</div>
+        <h1>困难 / 噩梦模式掉落概率</h1>
+        <p class="subtitle">选择掉落来源，看品质概率；再点品质，看对应价值概率。页面数据直接内嵌，断网和手机本地打开都能用。</p>
+      </div>
+      <div class="segmented" aria-label="难度">
+        <button type="button" data-difficulty="hard" class="active">困难</button>
+        <button type="button" data-difficulty="nightmare">噩梦</button>
+      </div>
+    </header>
+
+    <section class="logic-strip" aria-label="概率链">
+      <div class="logic-step"><strong>① 是否出货</strong>先按 reward_pack_rate 判断；罐子和地面点可能不掉。</div>
+      <div class="logic-step"><strong>② 品质 / 奖励包</strong>通过后，按 reward_pack_pool 的相对权重选一个包。</div>
+      <div class="logic-step"><strong>③ 具体价值</strong>包内再按 reward_total_weight 与阈值选择具体物品。</div>
+    </section>
+
+    <section>
+      <div class="section-title">
+        <h2>选择掉落来源</h2>
+        <div class="filters" id="filters"></div>
+      </div>
+      <div class="sources" id="sources"></div>
+    </section>
+
+    <section class="workspace">
+      <article class="panel">
+        <div class="panel-head">
+          <h2 id="qualityTitle">品质概率</h2>
+          <p id="qualitySubtitle"></p>
+        </div>
+        <div class="panel-body">
+          <div class="roll-tabs" id="rollTabs"></div>
+          <div class="roll-note" id="rollNote"></div>
+          <div class="quality-list" id="qualityList"></div>
+          <div class="source-detail" id="sourceDetail"></div>
+        </div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-head">
+          <h2 id="valueTitle">价值概率</h2>
+          <p id="valueSubtitle">点击左侧一个品质查看。</p>
+        </div>
+        <div class="panel-body" id="valuePanel"></div>
+      </article>
+    </section>
+
+    <details class="audit">
+      <summary>数据来源与计算口径</summary>
+      <div class="audit-body">
+        <ul>
+          <li>数据根据客户端可观察配置和游戏内结果整理；本公开版不附带客户端资源、反编译结果或提取工具。</li>
+          <li>计算顺序为“是否触发 → 奖励池相对权重 → 池内物品权重”，页面所示单次概率包含前置触发率。</li>
+          <li>地面散落物分为两条不同奖励链，因此以 A / B 区分；字母不是官方物品名称。</li>
+          <li>怪物栏目只列出能够确认的固定掉落；天气、技能和活动条件不会用推测概率补齐。</li>
+          <li>页面显示的是非监管玩家的 103/104 奖励链。紫、金、Boss 箱的“主奖励 / 40%附加 / 30%附加”是独立抽取，不应相加成一张总概率表。</li>
+          <li>特殊物品 60415001 的资源字段为 <code>value=600000</code>、<code>flash_prob=2000</code>、<code>flash_value=1400000</code>；按同一奖励系统万分制显示为 80% / 20% 两个价值结果。</li>
+        </ul>
+      </div>
+    </details>
+    <div class="foot">非官方玩家整理 · 不包含服务器热更、活动临时覆盖或新手教学模式</div>
+  </main>
+
+  <script>
+    const PACK_WEIGHTS = {
+      101001:12000, 101002:7900, 101003:5250, 101004:1000,
+      101005:1000, 101008:10000, 101014:1000, 101019:1000, 101020:4250
+    };
+
+    // [item_id, item_num, descending threshold]
+    const PACK_ROWS = {
+      101001:[[60312014,1,11000],[60312013,1,10000],[60312012,1,9000],[60312011,1,8000],[60312008,1,7000],[60312007,1,6000],[60312006,1,5000],[60312005,1,4000],[60312004,1,3000],[60312003,1,2000],[60312002,1,1000],[60312001,1,0]],
+      101002:[[60313011,1,7200],[60313010,1,6500],[60313009,1,5800],[60313008,1,5100],[60313007,1,4400],[60313006,1,3400],[60313005,1,2700],[60313004,1,2000],[60313002,1,1000],[60313001,1,0]],
+      101003:[[60314008,1,5200],[60314007,1,5000],[60314006,1,4500],[60314005,1,4000],[60314004,1,3500],[60314003,1,3000],[60314002,1,2000],[60314001,1,0]],
+      101004:[[60319001,1,0]],
+      101005:[[60415001,1,0]],
+      101008:[[60312009,1,0]],
+      101014:[[60319002,1,0]],
+      101019:[[60313012,1,0]],
+      101020:[[60314008,1,4200],[60314007,1,4000],[60314006,1,3500],[60314005,1,3000],[60314004,1,2500],[60314003,1,2000],[60314002,1,1000],[60314001,1,0]]
+    };
+
+    const ITEMS = {
+      60312001:{q:3,v:300}, 60312002:{q:3,v:600}, 60312003:{q:3,v:800},
+      60312004:{q:3,v:1000}, 60312005:{q:3,v:1600}, 60312006:{q:3,v:2700},
+      60312007:{q:3,v:3000}, 60312008:{q:3,v:5000}, 60312009:{q:3,v:1200},
+      60312010:{q:3,v:2000,label:"木板"}, 60312011:{q:3,v:1600},
+      60312012:{q:3,v:4200}, 60312013:{q:3,v:5000}, 60312014:{q:3,v:2000},
+      60313001:{q:4,v:5000}, 60313002:{q:4,v:8000}, 60313004:{q:4,v:12000},
+      60313005:{q:4,v:15000}, 60313006:{q:4,v:7000}, 60313007:{q:4,v:14000},
+      60313008:{q:4,v:8000}, 60313009:{q:4,v:9000}, 60313010:{q:4,v:10000},
+      60313011:{q:4,v:8000}, 60313012:{q:4,v:10000,label:"回收物 7"},
+      60314001:{q:5,v:20000}, 60314002:{q:5,v:40000}, 60314003:{q:5,v:100000},
+      60314004:{q:5,v:200000}, 60314005:{q:5,v:150000}, 60314006:{q:5,v:80000},
+      60314007:{q:5,v:300000}, 60314008:{q:5,v:500000},
+      60319001:{q:4,v:5000,label:"特殊收藏品"},
+      60319002:{q:4,v:10000,label:"票券"},
+      60415001:{q:5,v:600000,label:"特殊金色物",flashProb:2000,flashValue:1400000}
+    };
+
+    const COMMON_ROLLS = {
+      groundA:{rate:4000,pool:[[101001,3200],[101008,500],[101002,300],[101003,10]]},
+      groundB:{rate:4000,pool:[[101001,3700],[101002,300],[101003,10]]},
+      vase:{rate:4000,pool:[[101001,8500],[101002,1000],[101003,10],[101004,500]]},
+      wood:{rate:10000,pool:[[101001,7500],[101002,1900],[101003,100],[101004,500]]},
+      bonusGlow:{rate:4000,pool:[[101004,4000]]},
+      bonusTicket:{rate:3000,pool:[[101014,3000]]},
+      nightmareBossBonus:{rate:10000,pool:[[101019,10000]]}
+    };
+
+    const DIFFICULTY_ROLLS = {
+      hard:{
+        purple:{rate:10000,pool:[[101002,8500],[101003,1000],[101004,500],[101005,50]]},
+        gold:{rate:10000,pool:[[101003,9800],[101005,200]]},
+        boss:{rate:10000,pool:[[101003,9800],[101005,200]]}
+      },
+      nightmare:{
+        purple:{rate:10000,pool:[[101002,7000],[101003,2900],[101004,500],[101005,60]]},
+        gold:{rate:10000,pool:[[101003,9790],[101005,210]]},
+        boss:{rate:10000,pool:[[101020,9770],[101005,230]]}
+      }
+    };
+
+    const SOURCES = [
+      {id:"wood",cat:"container",icon:"▣",name:"木箱",meta:"box 6 · reward 1004",detail:"箱体资源明确配置 box_level=1、reward_id=1004。一次开启主抽取必触发；四级概率包含普通四级物与 5,000 价值特殊收藏品。",rolls:()=>[{name:"主奖励",note:"一次开启只从本池选 1 个奖励包；这里没有“不掉落”。",...COMMON_ROLLS.wood}]},
+      {id:"vase",cat:"container",icon:"♜",name:"可破坏罐子",meta:"box 2/7 · reward 1003",detail:"两个罐子箱体记录都指向 reward_id=1003。打碎后先进行 40% 触发判断，所以 60% 不产生奖励物。",rolls:()=>[{name:"打碎掉落",note:"40% 进入奖励池，60% 不掉落；进入池后才选择品质和价值。",...COMMON_ROLLS.vase}]},
+      {id:"groundA",cat:"ground",icon:"◆",name:"地面散落物 A",meta:"MazeGroup · reward 1001",detail:"已从使用房间的 scene 元数据中确认 AttrExtra.id=1001；恢复样本中出现 20 次。字母 A 只是区分两条源码奖励链，不是自造物品名称。",rolls:()=>[{name:"地面生成",note:"该地面候选点有 40% 生成奖励；A 链额外包含固定 1,200 价值三级物包。",...COMMON_ROLLS.groundA}]},
+      {id:"groundB",cat:"ground",icon:"◇",name:"地面散落物 B",meta:"MazeGroup · reward 1002",detail:"已从使用房间的 scene 元数据中确认 AttrExtra.id=1002；恢复样本中出现 18 次。显示为 B 是因为客户端本地化名称尚未被静态表直接解析。",rolls:()=>[{name:"地面生成",note:"该地面候选点有 40% 生成奖励；B 链使用普通三级物包。",...COMMON_ROLLS.groundB}]},
+      {id:"purple",cat:"special",icon:"⬟",name:"紫箱",meta:"box 11 · reward 1005",detail:"普通随机紫箱为 box 11。每次开启会顺序执行 3 条独立 subset，所以主奖励之外仍可能再掉特殊收藏品和票券。累计规则每次记 10 step，达到 150 时额外给 20k/40k；它不是本次主奖励保底。",rolls:d=>[
+        {name:"主奖励",note:`${d==="hard"?"困难":"噩梦"}主池，100% 触发并选 1 个奖励包。`,...DIFFICULTY_ROLLS[d].purple},
+        {name:"附加收藏品",note:"独立于主奖励：40% 掉 5,000 价值四级特殊收藏品。",...COMMON_ROLLS.bonusGlow},
+        {name:"附加票券",note:"独立于主奖励：30% 掉 10,000 价值四级票券。",...COMMON_ROLLS.bonusTicket}
+      ]},
+      {id:"gold",cat:"special",icon:"⬢",name:"金箱",meta:"box 21 · reward 1006",detail:"随机金箱为 box 21。主池只含五级物；仍会另外执行 40% 收藏品与 30% 票券抽取。累计规则每次记 20 step，属于跨箱持久化附加奖励。",rolls:d=>[
+        {name:"主奖励",note:`${d==="hard"?"困难":"噩梦"}主池：普通五级物与特殊金色物二选一。`,...DIFFICULTY_ROLLS[d].gold},
+        {name:"附加收藏品",note:"独立于主奖励：40% 掉 5,000 价值四级特殊收藏品。",...COMMON_ROLLS.bonusGlow},
+        {name:"附加票券",note:"独立于主奖励：30% 掉 10,000 价值四级票券。",...COMMON_ROLLS.bonusTicket}
+      ]},
+      {id:"boss",cat:"special",icon:"✦",name:"Boss 奖励箱",meta:"box 31 · reward 1007",detail:"Boss 箱模型是 book 类型 box 31。Boss 主池与金箱不完全相同；噩梦额外还有一条固定 10,000 价值四级物抽取。",rolls:d=>[
+        {name:"主奖励",note:`${d==="hard"?"困难":"噩梦"} Boss 主池。`,...DIFFICULTY_ROLLS[d].boss},
+        {name:"附加收藏品",note:"独立于主奖励：40% 掉 5,000 价值四级特殊收藏品。",...COMMON_ROLLS.bonusGlow},
+        {name:"附加票券",note:"独立于主奖励：30% 掉 10,000 价值四级票券。",...COMMON_ROLLS.bonusTicket},
+        ...(d==="nightmare"?[{name:"噩梦附加",note:"噩梦 Boss 奖励链独有：固定再给 1 个 10,000 价值四级物。",...COMMON_ROLLS.nightmareBossBonus}]:[])
+      ]},
+      {id:"thief",cat:"monster",icon:"☠",name:"盗贼怪固定掉落",meta:"monster 3 · item 60312010",detail:"怪物表仅 monster id 3 写有固定 drop_reward_id=60312010。死亡逻辑查不到同名奖励链时会按物品 ID 直接生成，因此是固定一块三级木板，价值 2,000。",rolls:()=>[{name:"死亡掉落",note:"困难/噩梦普通流程下，执行到怪物死亡掉落逻辑即直接生成该物品。",rate:10000,direct:[{itemId:60312010,prob:1}]}]},
+      {id:"otherMonsters",cat:"monster",icon:"×",name:"其他普通怪",meta:"基础表无固定 drop_reward_id",detail:"其余 15 条基础怪物记录没有固定 drop_reward_id。不能把盗贼怪的木板概率套给所有怪物。天气、技能或 Boss 系统另行注入的奖励属于下一项。",status:"none",rolls:()=>[]},
+      {id:"eventMonster",cat:"monster",icon:"⚡",name:"怪物事件掉落",meta:"天气 / 技能运行时注入",detail:"源码确认存在 _weather_drop_reward_id 与 _skill_drop_reward_id，并在死亡时走奖励系统；但触发依赖当前天气、具体技能、怪物池和运行状态，没有一张可脱离事件条件使用的统一“击杀爆率”。",status:"conditional",rolls:()=>[]},
+      {id:"furniture",cat:"container",icon:"▤",name:"普通可破坏家具",meta:"桌 / 衣架 / 椅子",detail:"box 1/3/4/5 的 box_type=CanBreak，但箱体表没有 reward_id；它们是可破坏场景物，不应显示成会出回收物的罐子。",status:"none",rolls:()=>[]}
+    ];
+
+    const CATEGORY = {all:"全部",ground:"地面物",container:"容器",special:"特殊箱",monster:"怪物"};
+    const QUALITY = {
+      3:{label:"三级 · 蓝",color:"var(--q3)"},
+      4:{label:"四级 · 紫",color:"var(--q4)"},
+      5:{label:"五级 · 金",color:"var(--q5)"},
+      0:{label:"不掉落",color:"var(--none)"}
+    };
+
+    let state = {difficulty:"hard", category:"all", sourceId:"wood", rollIndex:0, quality:3};
+
+    const fmtPct = p => {
+      const n = p * 100;
+      if (n === 0 || n >= 10) return n.toFixed(n % 1 ? 2 : 0) + "%";
+      if (n >= 1) return n.toFixed(3).replace(/0+$/,'').replace(/\.$/,'') + "%";
+      return n.toFixed(5).replace(/0+$/,'').replace(/\.$/,'') + "%";
+    };
+    const fmtValue = v => new Intl.NumberFormat("zh-CN").format(Math.round(v));
+
+    function expandPack(packId) {
+      const total = PACK_WEIGHTS[packId];
+      const rows = PACK_ROWS[packId];
+      let previous = total;
+      const out = [];
+      rows.forEach(([itemId,itemNum,threshold]) => {
+        const item = ITEMS[itemId];
+        const baseProb = (previous - threshold) / total;
+        previous = threshold;
+        if (item.flashProb) {
+          const flash = item.flashProb / 10000;
+          out.push({itemId,q:item.q,value:item.v,prob:baseProb*(1-flash),label:item.label});
+          out.push({itemId,q:item.q,value:item.flashValue,prob:baseProb*flash,label:item.label+" · 闪金"});
+        } else {
+          out.push({itemId,q:item.q,value:item.v,prob:baseProb,label:item.label});
+        }
+      });
+      return out;
+    }
+
+    function computeRoll(roll) {
+      const trigger = roll.rate / 10000;
+      let outcomes = [];
+      if (roll.direct) {
+        outcomes = roll.direct.map(x => ({...x,q:ITEMS[x.itemId].q,value:ITEMS[x.itemId].v,label:ITEMS[x.itemId].label}));
+      } else {
+        const poolTotal = roll.pool.reduce((s,x)=>s+x[1],0);
+        roll.pool.forEach(([packId,weight]) => {
+          expandPack(packId).forEach(item => outcomes.push({...item,packId,prob:item.prob*weight/poolTotal*trigger}));
+        });
+      }
+      const qMap = new Map();
+      outcomes.forEach(o => {
+        if (!qMap.has(o.q)) qMap.set(o.q,[]);
+        qMap.get(o.q).push(o);
+      });
+      if (trigger < 1) qMap.set(0,[{q:0,value:0,prob:1-trigger,label:"本次未通过触发率"}]);
+      return {trigger,outcomes,qMap};
+    }
+
+    function currentSource() { return SOURCES.find(x=>x.id===state.sourceId); }
+    function currentRolls() { return currentSource().rolls(state.difficulty); }
+
+    function renderFilters() {
+      const root = document.getElementById("filters");
+      root.innerHTML = Object.entries(CATEGORY).map(([id,label])=>`<button type="button" class="filter ${state.category===id?'active':''}" data-category="${id}">${label}</button>`).join("");
+      root.querySelectorAll("button").forEach(btn=>btn.onclick=()=>{
+        state.category=btn.dataset.category;
+        const visible=SOURCES.filter(s=>state.category==="all"||s.cat===state.category);
+        if (!visible.some(s=>s.id===state.sourceId)) { state.sourceId=visible[0].id; state.rollIndex=0; }
+        render();
+      });
+    }
+
+    function renderSources() {
+      const visible=SOURCES.filter(s=>state.category==="all"||s.cat===state.category);
+      document.getElementById("sources").innerHTML=visible.map(s=>`
+        <button type="button" class="source ${state.sourceId===s.id?'active':''}" data-source="${s.id}">
+          ${s.status?`<span class="source-tag">${s.status==='none'?'无固定掉落':'条件型'}</span>`:''}
+          <div class="source-icon">${s.icon}</div>
+          <span class="source-name">${s.name}</span>
+          <span class="source-meta">${s.meta}</span>
+        </button>`).join("");
+      document.querySelectorAll(".source").forEach(btn=>btn.onclick=()=>{
+        state.sourceId=btn.dataset.source; state.rollIndex=0; state.quality=3; render();
+      });
+    }
+
+    function renderAnalysis() {
+      const source=currentSource();
+      const rolls=currentRolls();
+      document.getElementById("qualityTitle").textContent=source.name+" · 品质概率";
+      document.getElementById("qualitySubtitle").textContent=state.difficulty==="hard"?"困难 103 奖励链":"噩梦 104 奖励链";
+      document.getElementById("sourceDetail").innerHTML=`<b>资源结论：</b>${source.detail}`;
+      const tabs=document.getElementById("rollTabs");
+      const note=document.getElementById("rollNote");
+      const list=document.getElementById("qualityList");
+
+      if (!rolls.length) {
+        tabs.innerHTML="";
+        note.style.display="none";
+        list.innerHTML=`<div class="empty"><strong>${source.status==='conditional'?'没有统一概率，不等于不会掉':'没有固定奖励链'}</strong><span class="${source.status==='conditional'?'warning':''}">${source.detail}</span></div>`;
+        document.getElementById("valueTitle").textContent="价值概率";
+        document.getElementById("valueSubtitle").textContent="当前来源没有可独立计算的固定价值表。";
+        document.getElementById("valuePanel").innerHTML=`<div class="empty">这里不会用其他箱子或怪物的概率代填。</div>`;
+        return;
+      }
+
+      state.rollIndex=Math.min(state.rollIndex,rolls.length-1);
+      tabs.innerHTML=rolls.map((r,i)=>`<button type="button" class="roll-tab ${i===state.rollIndex?'active':''}" data-roll="${i}">${r.name}</button>`).join("");
+      tabs.style.display=rolls.length>1?"flex":"none";
+      tabs.querySelectorAll("button").forEach(btn=>btn.onclick=()=>{state.rollIndex=Number(btn.dataset.roll);state.quality=3;renderAnalysis();});
+
+      const roll=rolls[state.rollIndex];
+      const calc=computeRoll(roll);
+      note.style.display="block";
+      note.innerHTML=`<b>${roll.name}：</b>${roll.note}`;
+      const qualities=[...calc.qMap.entries()].map(([q,items])=>({q,p:items.reduce((s,x)=>s+x.prob,0),items})).sort((a,b)=>b.q-a.q);
+      if (!qualities.some(x=>x.q===state.quality)) state.quality=qualities.find(x=>x.q!==0)?.q ?? 0;
+      list.innerHTML=qualities.map(x=>{
+        const cfg=QUALITY[x.q];
+        const hint=x.q===0?"没有进入奖励包":"点击查看这一品质的价值分布";
+        return `<button type="button" class="quality ${state.quality===x.q?'active':''}" data-quality="${x.q}" style="--accent:${cfg.color};--width:${Math.min(100,x.p*100)}%">
+          <div class="quality-top"><span class="quality-label">${cfg.label}</span><span class="quality-percent">${fmtPct(x.p)}</span></div>
+          <div class="track"><i></i></div><small>${hint}</small>
+        </button>`;
+      }).join("");
+      list.querySelectorAll("button").forEach(btn=>btn.onclick=()=>{state.quality=Number(btn.dataset.quality);renderAnalysis();});
+      renderValues(source,roll,calc);
+    }
+
+    function renderValues(source,roll,calc) {
+      const q=state.quality;
+      const cfg=QUALITY[q];
+      const items=calc.qMap.get(q)||[];
+      const qProb=items.reduce((s,x)=>s+x.prob,0);
+      document.getElementById("valueTitle").textContent=`${cfg.label} · 价值概率`;
+      document.getElementById("valueSubtitle").textContent=`${source.name} / ${roll.name}；右侧“单次绝对概率”已包含前面的触发率。`;
+      if (q===0) {
+        document.getElementById("valuePanel").innerHTML=`<div class="empty"><strong>不掉落 ${fmtPct(qProb)}</strong>这一结果发生在 reward_pack_rate 判断阶段，因此没有物品价值。</div>`;
+        return;
+      }
+      const byValue=new Map();
+      items.forEach(item=>{
+        const key=item.value;
+        if(!byValue.has(key)) byValue.set(key,{value:key,prob:0,ids:new Set(),labels:new Set()});
+        const row=byValue.get(key); row.prob+=item.prob; row.ids.add(item.itemId); if(item.label)row.labels.add(item.label);
+      });
+      const values=[...byValue.values()].sort((a,b)=>a.value-b.value);
+      const expected=values.reduce((s,x)=>s+x.value*x.prob/qProb,0);
+      const sourceExpected=values.reduce((s,x)=>s+x.value*x.prob,0);
+      const maxWithin=Math.max(...values.map(x=>x.prob/qProb));
+      const rows=values.map(x=>{
+        const within=x.prob/qProb;
+        const label=[...x.labels].join(" / ");
+        return `<tr>
+          <td><span class="value-main">${fmtValue(x.value)}</span><span class="item-ids">${label?label+" · ":""}ID ${[...x.ids].join(", ")}</span></td>
+          <td><span class="within">${fmtPct(within)}</span><div class="mini-track"><i style="width:${within/maxWithin*100}%"></i></div></td>
+          <td class="overall">${fmtPct(x.prob)}</td>
+        </tr>`;
+      }).join("");
+      document.getElementById("valuePanel").style.setProperty("--active-quality",cfg.color);
+      document.getElementById("valuePanel").innerHTML=`
+        <div class="value-summary">
+          <div class="metric"><span>该品质绝对概率</span><strong>${fmtPct(qProb)}</strong></div>
+          <div class="metric"><span>该品质平均价值</span><strong>${fmtValue(expected)}</strong></div>
+          <div class="metric"><span>本抽取价值期望贡献</span><strong>${fmtValue(sourceExpected)}</strong></div>
+        </div>
+        <table class="value-table">
+          <thead><tr><th style="width:43%">价值 / 物品</th><th style="width:29%">品质内概率</th><th style="width:28%">单次绝对概率</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>`;
+    }
+
+    function render() { renderFilters(); renderSources(); renderAnalysis(); }
+    document.querySelectorAll("[data-difficulty]").forEach(btn=>btn.onclick=()=>{
+      state.difficulty=btn.dataset.difficulty;
+      document.querySelectorAll("[data-difficulty]").forEach(x=>x.classList.toggle("active",x===btn));
+      state.rollIndex=0; render();
+    });
+    render();
+  </script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+.DS_Store
+Thumbs.db
+*.exe
+*.dll
+*.dylib
+*.wpk
+*.idx
+*.gim
+*.scn
+*.pyc
+__pycache__/
+file/
+goldrush_ai_handoff/
+identityv_builtin_maps/
+

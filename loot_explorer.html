@@ -292,9 +292,9 @@
     </header>
 
     <section class="logic-strip" aria-label="概率链">
-      <div class="logic-step"><strong>① 是否出货</strong>先按 reward_pack_rate 判断；罐子和地面点可能不掉。</div>
-      <div class="logic-step"><strong>② 品质 / 奖励包</strong>通过后，按 reward_pack_pool 的相对权重选一个包。</div>
-      <div class="logic-step"><strong>③ 具体价值</strong>包内再按 reward_total_weight 与阈值选择具体物品。</div>
+      <div class="logic-step"><strong>① 是否掉落</strong>罐子和地面点先判断本次是否产生物品。</div>
+      <div class="logic-step"><strong>② 物品品质</strong>产生物品后，再按相对权重选择品质。</div>
+      <div class="logic-step"><strong>③ 具体价值</strong>最后在该品质内选择具体价值档位。</div>
     </section>
 
     <section>
@@ -329,15 +329,15 @@
     </section>
 
     <details class="audit">
-      <summary>数据来源与计算口径</summary>
+      <summary>概率说明</summary>
       <div class="audit-body">
         <ul>
-          <li>数据根据客户端可观察配置和游戏内结果整理；本公开版不附带客户端资源、反编译结果或提取工具。</li>
+          <li>数据根据玩家记录和游戏内结果整理，可能随版本更新而变化。</li>
           <li>计算顺序为“是否触发 → 奖励池相对权重 → 池内物品权重”，页面所示单次概率包含前置触发率。</li>
           <li>地面散落物分为两条不同奖励链，因此以 A / B 区分；字母不是官方物品名称。</li>
           <li>怪物栏目只列出能够确认的固定掉落；天气、技能和活动条件不会用推测概率补齐。</li>
-          <li>页面显示的是非监管玩家的 103/104 奖励链。紫、金、Boss 箱的“主奖励 / 40%附加 / 30%附加”是独立抽取，不应相加成一张总概率表。</li>
-          <li>特殊物品 60415001 的资源字段为 <code>value=600000</code>、<code>flash_prob=2000</code>、<code>flash_value=1400000</code>；按同一奖励系统万分制显示为 80% / 20% 两个价值结果。</li>
+          <li>紫、金、Boss 箱的“主奖励 / 40%附加 / 30%附加”是独立抽取，不应相加成一张总概率表。</li>
+          <li>特殊高价值物品按 80% / 20% 显示两个可能价值结果。</li>
         </ul>
       </div>
     </details>
@@ -405,30 +405,30 @@
     };
 
     const SOURCES = [
-      {id:"wood",cat:"container",icon:"▣",name:"木箱",meta:"box 6 · reward 1004",detail:"箱体资源明确配置 box_level=1、reward_id=1004。一次开启主抽取必触发；四级概率包含普通四级物与 5,000 价值特殊收藏品。",rolls:()=>[{name:"主奖励",note:"一次开启只从本池选 1 个奖励包；这里没有“不掉落”。",...COMMON_ROLLS.wood}]},
-      {id:"vase",cat:"container",icon:"♜",name:"可破坏罐子",meta:"box 2/7 · reward 1003",detail:"两个罐子箱体记录都指向 reward_id=1003。打碎后先进行 40% 触发判断，所以 60% 不产生奖励物。",rolls:()=>[{name:"打碎掉落",note:"40% 进入奖励池，60% 不掉落；进入池后才选择品质和价值。",...COMMON_ROLLS.vase}]},
-      {id:"groundA",cat:"ground",icon:"◆",name:"地面散落物 A",meta:"MazeGroup · reward 1001",detail:"已从使用房间的 scene 元数据中确认 AttrExtra.id=1001；恢复样本中出现 20 次。字母 A 只是区分两条源码奖励链，不是自造物品名称。",rolls:()=>[{name:"地面生成",note:"该地面候选点有 40% 生成奖励；A 链额外包含固定 1,200 价值三级物包。",...COMMON_ROLLS.groundA}]},
-      {id:"groundB",cat:"ground",icon:"◇",name:"地面散落物 B",meta:"MazeGroup · reward 1002",detail:"已从使用房间的 scene 元数据中确认 AttrExtra.id=1002；恢复样本中出现 18 次。显示为 B 是因为客户端本地化名称尚未被静态表直接解析。",rolls:()=>[{name:"地面生成",note:"该地面候选点有 40% 生成奖励；B 链使用普通三级物包。",...COMMON_ROLLS.groundB}]},
-      {id:"purple",cat:"special",icon:"⬟",name:"紫箱",meta:"box 11 · reward 1005",detail:"普通随机紫箱为 box 11。每次开启会顺序执行 3 条独立 subset，所以主奖励之外仍可能再掉特殊收藏品和票券。累计规则每次记 10 step，达到 150 时额外给 20k/40k；它不是本次主奖励保底。",rolls:d=>[
+      {id:"wood",cat:"container",icon:"▣",name:"木箱",meta:"普通容器",detail:"一次开启必定获得一份主奖励；四级概率包含普通四级物与 5,000 价值特殊收藏品。",rolls:()=>[{name:"主奖励",note:"一次开启只从本池选 1 个奖励包；这里没有“不掉落”。",...COMMON_ROLLS.wood}]},
+      {id:"vase",cat:"container",icon:"♜",name:"可破坏罐子",meta:"可破坏容器",detail:"打碎后有 40% 概率产生奖励物，60% 不掉落；出现物品后再判断品质和价值。",rolls:()=>[{name:"打碎掉落",note:"40% 进入奖励池，60% 不掉落；进入池后才选择品质和价值。",...COMMON_ROLLS.vase}]},
+      {id:"groundA",cat:"ground",icon:"◆",name:"地面散落物 A",meta:"地面刷新点 A",detail:"A、B 用来区分两类不同的地面掉落。A 类额外包含固定 1,200 价值三级物品。",rolls:()=>[{name:"地面生成",note:"该地面候选点有 40% 生成奖励；A 类额外包含固定 1,200 价值三级物品。",...COMMON_ROLLS.groundA}]},
+      {id:"groundB",cat:"ground",icon:"◇",name:"地面散落物 B",meta:"地面刷新点 B",detail:"A、B 用来区分两类不同的地面掉落；B 类使用普通三级物品池。",rolls:()=>[{name:"地面生成",note:"该地面候选点有 40% 生成奖励；B 类使用普通三级物品池。",...COMMON_ROLLS.groundB}]},
+      {id:"purple",cat:"special",icon:"⬟",name:"紫箱",meta:"高级容器",detail:"每次开启会进行主奖励和两次独立附加判断，因此除主奖励外仍可能出现特殊收藏品和票券。累计进度达到条件时还会给额外奖励，但不改变本次主奖励。",rolls:d=>[
         {name:"主奖励",note:`${d==="hard"?"困难":"噩梦"}主池，100% 触发并选 1 个奖励包。`,...DIFFICULTY_ROLLS[d].purple},
         {name:"附加收藏品",note:"独立于主奖励：40% 掉 5,000 价值四级特殊收藏品。",...COMMON_ROLLS.bonusGlow},
         {name:"附加票券",note:"独立于主奖励：30% 掉 10,000 价值四级票券。",...COMMON_ROLLS.bonusTicket}
       ]},
-      {id:"gold",cat:"special",icon:"⬢",name:"金箱",meta:"box 21 · reward 1006",detail:"随机金箱为 box 21。主池只含五级物；仍会另外执行 40% 收藏品与 30% 票券抽取。累计规则每次记 20 step，属于跨箱持久化附加奖励。",rolls:d=>[
+      {id:"gold",cat:"special",icon:"⬢",name:"金箱",meta:"稀有容器",detail:"主奖励只包含五级物品；另外还会独立判断 40% 收藏品和 30% 票券。累计进度属于跨箱附加奖励。",rolls:d=>[
         {name:"主奖励",note:`${d==="hard"?"困难":"噩梦"}主池：普通五级物与特殊金色物二选一。`,...DIFFICULTY_ROLLS[d].gold},
         {name:"附加收藏品",note:"独立于主奖励：40% 掉 5,000 价值四级特殊收藏品。",...COMMON_ROLLS.bonusGlow},
         {name:"附加票券",note:"独立于主奖励：30% 掉 10,000 价值四级票券。",...COMMON_ROLLS.bonusTicket}
       ]},
-      {id:"boss",cat:"special",icon:"✦",name:"Boss 奖励箱",meta:"box 31 · reward 1007",detail:"Boss 箱模型是 book 类型 box 31。Boss 主池与金箱不完全相同；噩梦额外还有一条固定 10,000 价值四级物抽取。",rolls:d=>[
+      {id:"boss",cat:"special",icon:"✦",name:"Boss 奖励箱",meta:"Boss 奖励",detail:"Boss 主奖励与普通金箱并不完全相同；噩梦模式还会额外抽取一个固定 10,000 价值的四级物品。",rolls:d=>[
         {name:"主奖励",note:`${d==="hard"?"困难":"噩梦"} Boss 主池。`,...DIFFICULTY_ROLLS[d].boss},
         {name:"附加收藏品",note:"独立于主奖励：40% 掉 5,000 价值四级特殊收藏品。",...COMMON_ROLLS.bonusGlow},
         {name:"附加票券",note:"独立于主奖励：30% 掉 10,000 价值四级票券。",...COMMON_ROLLS.bonusTicket},
         ...(d==="nightmare"?[{name:"噩梦附加",note:"噩梦 Boss 奖励链独有：固定再给 1 个 10,000 价值四级物。",...COMMON_ROLLS.nightmareBossBonus}]:[])
       ]},
-      {id:"thief",cat:"monster",icon:"☠",name:"盗贼怪固定掉落",meta:"monster 3 · item 60312010",detail:"怪物表仅 monster id 3 写有固定 drop_reward_id=60312010。死亡逻辑查不到同名奖励链时会按物品 ID 直接生成，因此是固定一块三级木板，价值 2,000。",rolls:()=>[{name:"死亡掉落",note:"困难/噩梦普通流程下，执行到怪物死亡掉落逻辑即直接生成该物品。",rate:10000,direct:[{itemId:60312010,prob:1}]}]},
-      {id:"otherMonsters",cat:"monster",icon:"×",name:"其他普通怪",meta:"基础表无固定 drop_reward_id",detail:"其余 15 条基础怪物记录没有固定 drop_reward_id。不能把盗贼怪的木板概率套给所有怪物。天气、技能或 Boss 系统另行注入的奖励属于下一项。",status:"none",rolls:()=>[]},
-      {id:"eventMonster",cat:"monster",icon:"⚡",name:"怪物事件掉落",meta:"天气 / 技能运行时注入",detail:"源码确认存在 _weather_drop_reward_id 与 _skill_drop_reward_id，并在死亡时走奖励系统；但触发依赖当前天气、具体技能、怪物池和运行状态，没有一张可脱离事件条件使用的统一“击杀爆率”。",status:"conditional",rolls:()=>[]},
-      {id:"furniture",cat:"container",icon:"▤",name:"普通可破坏家具",meta:"桌 / 衣架 / 椅子",detail:"box 1/3/4/5 的 box_type=CanBreak，但箱体表没有 reward_id；它们是可破坏场景物，不应显示成会出回收物的罐子。",status:"none",rolls:()=>[]}
+      {id:"thief",cat:"monster",icon:"☠",name:"盗贼怪固定掉落",meta:"特定怪物掉落",detail:"盗贼怪固定掉落一块三级木板，价值 2,000。",rolls:()=>[{name:"死亡掉落",note:"困难和噩梦模式下均固定产生该物品。",rate:10000,direct:[{itemId:60312010,prob:1}]}]},
+      {id:"otherMonsters",cat:"monster",icon:"×",name:"其他普通怪",meta:"无统一固定掉落",detail:"其他普通怪没有可统一套用的固定掉落，不能使用盗贼怪的木板概率代替。",status:"none",rolls:()=>[]},
+      {id:"eventMonster",cat:"monster",icon:"⚡",name:"怪物事件掉落",meta:"天气 / 技能条件",detail:"这类掉落取决于当前天气、具体技能、怪物池和局内状态，因此没有一张脱离条件后仍准确的统一击杀概率表。",status:"conditional",rolls:()=>[]},
+      {id:"furniture",cat:"container",icon:"▤",name:"普通可破坏家具",meta:"桌 / 衣架 / 椅子",detail:"普通家具可以破坏，但不应按可掉落物品的罐子计算。",status:"none",rolls:()=>[]}
     ];
 
     const CATEGORY = {all:"全部",ground:"地面物",container:"容器",special:"特殊箱",monster:"怪物"};
@@ -522,7 +522,7 @@
       const rolls=currentRolls();
       document.getElementById("qualityTitle").textContent=source.name+" · 品质概率";
       document.getElementById("qualitySubtitle").textContent=state.difficulty==="hard"?"困难 103 奖励链":"噩梦 104 奖励链";
-      document.getElementById("sourceDetail").innerHTML=`<b>资源结论：</b>${source.detail}`;
+      document.getElementById("sourceDetail").innerHTML=`<b>说明：</b>${source.detail}`;
       const tabs=document.getElementById("rollTabs");
       const note=document.getElementById("rollNote");
       const list=document.getElementById("qualityList");
